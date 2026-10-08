@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Vila's — {% translate "Carta" %}{% endblock %}
+
+{% block content %}
+<div class="menu">
+    <h1 class="menu__title">{% translate "Nuestra Carta" %}</h1>
+
+    {% for category in categories %}
+        <section class="menu-category" id="category-{{ category.slug }}">
+            <h2 class="menu-category__title">{{ category.name }}</h2>
+
+            {% for subcategory in category.visible_subcategories %}
+                <div class="menu-subcategory" id="subcategory-{{ subcategory.slug }}">
+                    <h3 class="menu-subcategory__title">{{ subcategory.name }}</h3>
+
+                    <ul class="dish-list">
+                        {% for dish in subcategory.dishes.all %}
+                            <li class="dish" id="dish-{{ dish.pk }}">
+                                {% if dish.image %}
+                                    <img class="dish__image" src="{{ dish.image.url }}" alt="{{ dish.name }}" loading="lazy">
+                                {% endif %}
+
+                                <div class="dish__body">
+                                    <div class="dish__header">
+                                        <h4 class="dish__name">{{ dish.name }}</h4>
+                                        <span class="dish__price">{{ dish.price }}</span>
+                                    </div>
+
+                                    {% if dish.description %}
+                                        <p class="dish__description">{{ dish.description }}</p>
+                                    {% endif %}
+
+                                    {% if dish.prep_time_minutes %}
+                                        <p class="dish__prep-time">
+                                            {% translate "Tiempo de preparación" %}: {{ dish.prep_time_display }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        </section>
+    {% empty %}
+        <p class="menu__empty">{% translate "La carta estará disponible pronto." %}</p>
+    {% endfor %}
+</div>
+{% endblock %}

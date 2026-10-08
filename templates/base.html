@@ -1,0 +1,38 @@
+{% load i18n static %}<!DOCTYPE html>
+<html lang="{{ LANGUAGE_CODE }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Vila's — {% translate "Carta" %}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/menu.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="site">
+    <header class="site-header">
+        <a class="site-logo" href="{% url 'menu:index' %}">Vila's</a>
+
+        <form class="language-switcher" action="{% url 'set_language' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            {% get_current_language as current_language %}
+            {% get_available_languages as available_languages %}
+            {% for code, name in available_languages %}
+                <button
+                    class="language-switcher__option{% if code == current_language %} is-active{% endif %}"
+                    type="submit"
+                    name="language"
+                    value="{{ code }}"
+                >{{ code|upper }}</button>
+            {% endfor %}
+        </form>
+    </header>
+
+    <main class="site-main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <p class="site-footer__note">Vila's</p>
+    </footer>
+</body>
+</html>
