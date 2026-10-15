@@ -2,7 +2,7 @@
 
 Guía para desarrolladores que trabajen en este repositorio. Describe cómo está
 estructurado el proyecto, cómo correrlo y dónde configurar las cosas importantes
-(credenciales de Cloudinary, base de datos, despliegue, etc.).
+(clave de ImgBB, base de datos, despliegue, etc.).
 
 ## Descripción general
 
@@ -25,7 +25,7 @@ HTML semántico con clases listas para estilar.
 |---|---|
 | Framework | Django 6.1 |
 | Base de datos | PostgreSQL en producción / SQLite en local |
-| Imágenes | Cloudinary (`django-cloudinary-storage`, solo el backend de storage) |
+| Imágenes | ImgBB (`menu/storage.py`, backend de storage personalizado) |
 | Archivos estáticos | Whitenoise (producción) |
 | Traducciones | `django-modeltranslation` (contenido) + `gettext` (interfaz) |
 | Servidor | Gunicorn |
@@ -48,17 +48,19 @@ vilas_carta/
 ├── menu/                     # app principal
 │   ├── models.py             # Category, SubCategory, Dish
 │   ├── admin.py              # registro del Admin (inlines, pestañas ES/EN, acciones)
+│   ├── apps.py               # MenuConfig (títulos del admin en ready())
 │   ├── translation.py        # campos traducibles por modelo (modeltranslation)
+│   ├── storage.py            # ImgBBStorage (sube imágenes a ImgBB, guarda URL)
 │   ├── views.py              # MenuView (vista pública)
 │   ├── urls.py               # rutas de la app
-│   ├── tests.py              # tests de modelos, vista y admin
-│   └── migrations/
+│   ├── tests.py              # tests de modelos, vista, admin y storage
+│   └── migrations/           # 0001_initial, 0002_alter_dish_image
 ├── templates/
-│   ├── base.html             # layout + selector de idioma
+│   ├── base.html             # layout + selector de idioma + footer
 │   └── menu/index.html       # carta pública
-├── static/css/menu.css       # estilos base (placeholder)
+├── static/css/menu.css       # estilos del tema oscuro (aprobado en Stitch)
 ├── locale/en/LC_MESSAGES/    # traducciones de interfaz (.po fuente + .mo compilado)
-├── media/                    # subidas locales (solo desarrollo; ignorado por git)
+├── media/                    # MEDIA_ROOT de referencia; sin uso (imágenes en ImgBB; ignorado por git)
 └── staticfiles/              # salida de collectstatic (ignorado por git)
 ```
 
@@ -75,38 +77,59 @@ El proyecto usa `python-decouple` y lee un archivo `.env` en la raíz
 | `CSRF_TRUSTED_ORIGINS` | Orígenes de confianza para CSRF (dominio de Render y dominio propio). |
 | `DATABASE_URL` | Vacío en local (usa SQLite). En producción la provee Render. |
 | `TIME_ZONE` | Zona horaria (por defecto `America/Mexico_City`). |
-| `CLOUDINARY_URL` | Credenciales de Cloudinary. Ver siguiente sección. |
+| `IMGBB_API_KEY` | Clave de API de ImgBB. Ver siguiente sección. |
 
-### Dónde poner las credenciales de Cloudinary
+### Dónde poner la clave de ImgBB
 
-Toda la configuración de imágenes se controla con **una sola variable**:
-`CLOUDINARY_URL`.
+Todo el almacenamiento de imágenes se controla con **una sola variable**:
+`IMGBB_API_KEY`. La clave se obtiene en https://api.imgbb.com/ (Dashboard →
+API).
 
 - En **local**: abre tu `.env` (copia de `.env.example`) y añade:
 
   ```
-  CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME
+  IMGBB_API_KEY=tu_clave_de_imgbb
   ```
 
-  Encuentras `API_KEY`, `API_SECRET` y `CLOUD_NAME` en el panel de Cloudinary
-  (Dashboard → Account Details / API Keys).
+- En **producción (Render)**: agrega la variable de entorno `IMGBB_API_KEY`
+  en la configuración del servicio (Environment → Environment Variables). Está
+  declarada en `render.yaml` con `sync: false`, así que Render te pedirá el
+  valor al crear el servicio.
 
-- En **producción (Render)**: agrega la variable de entorno `CLOUDINARY_URL`
-  con el mismo formato en la configuración del servicio (Environment →
-  Secret File / Environment Variables). Está declarada en `render.yaml` con
-  `sync: false`, así que Render te pedirá el valor al crear el servicio.
+**Comportamiento:**
 
-**Comportamiento según la variable:**
+- El storage por defecto es `menu.storage.ImgBBStorage`
+  (`vilas_carta/settings.py`, bloque `STORAGES`): cada imagen subida se envía a
+  la API de ImgBB y en la base de datos se guarda la **URL directa**.
+- Si `IMGBB_API_KEY` no está definida, subir una imagen falla con
+  `ImproperlyConfigured` (no hay almacenamiento local de respaldo).
+- `build.sh` **no** necesita la clave; solo se usa en runtime.
 
-- Si `CLOUDINARY_URL` está definida → el storage por defecto es
-  `cloudinary_storage.storage.MediaCloudinaryStorage` y las imágenes se suben a
-  Cloudinary (`vilas_carta/settings.py`, bloque `STORAGES`).
-- Si **no** está definida → se usa `FileSystemStorage` local (`media/`).
-- `build.sh` **no** necesita configuración de Cloudinary; solo se usa en runtime.
+**Flujo de una subida de imagen:**
 
-> Nota: no instalamos la app `cloudinary_storage` en `INSTALLED_APPS` porque
-> incluye un comando `collectstatic` incompatible con Django 6.1
-> (`STATICFILES_STORAGE` fue eliminado). Solo se usa su clase de storage.
+1. En `/admin/` se sube la imagen del platillo (`Dish.image`).
+2. Django llama a `ImgBBStorage._save()`, que hace `POST` a
+   `https://api.imgbb.com/1/upload` (multipart: campo `image`; query: `key`),
+   con `timeout=30`.
+3. ImgBB responde `200` con la URL directa; esa URL se guarda en `Dish.image`.
+4. Si falla, `_save` lanza `RuntimeError` (no se guarda nada); sin
+   `IMGBB_API_KEY` lanza `ImproperlyConfigured`.
+
+> Seguridad: el repositorio es público, así que **nunca** pongas la clave en el
+> código ni en `.env.example`. Va solo en `.env` (ignorado por git) y en las
+> variables de entorno de Render.
+
+> Limitaciones de ImgBB: no se puede leer ni borrar una imagen ya subida con
+> esta integración. `_open` lanza `NotImplementedError`, `exists` siempre es
+> `False` y `delete` no hace nada (las imágenes reemplazadas quedan huérfanas).
+> `url()` devuelve la cadena tal cual (ya es una URL absoluta). No se debe usar
+> para redimensionar ni reprocesar imágenes en el servidor.
+
+> Error `code 103` ("You have been forbidden to use this website"): ImgBB lo
+> devuelve para imágenes inválidas o demasiado pequeñas (p. ej. un PNG de 1×1).
+> **No** es un problema de la clave ni del código: con una imagen real la subida
+> devuelve `200` y la URL. Al probar, usa una imagen real. Una clave realmente
+> inválida da `code 100` ("Invalid API v1 key"), lo que permite distinguir ambas.
 
 ## Cómo correr en local
 
@@ -120,7 +143,7 @@ pip install -r requirements.txt
 
 # 3. Configurar variables de entorno
 Copy-Item .env.example .env
-# edita .env (SECRET_KEY, CLOUDINARY_URL, etc.)
+# edita .env (SECRET_KEY, IMGBB_API_KEY, etc.)
 
 # 4. Aplicar migraciones
 python manage.py migrate
@@ -201,13 +224,16 @@ python manage.py test
 ```
 
 Cubren: generación de slugs, `prep_time_display`, visibilidad de la vista pública
-(solo activos y disponibles), prefijos de idioma y la traducción de interfaz.
+(solo activos y disponibles), prefijos de idioma, la traducción de interfaz y el
+almacenamiento de imágenes (`ImgBBStorage`, con `requests` mockeado).
 
 ## Estáticos y multimedia
 
 - **Estáticos**: `static/` (fuente) → `staticfiles/` (`collectstatic`), servidos
   por Whitenoise. En producción usa almacenamiento con *manifest*.
-- **Multimedia**: local en `media/` (dev) o Cloudinary (producción).
+- **Multimedia**: todas las imágenes se suben a **ImgBB** (`menu/storage.py`) y la
+  base de datos guarda la URL directa. `MEDIA_ROOT` (`media/`) queda solo como
+  referencia y no se usa como storage.
 
 ## Despliegue en Render
 
@@ -216,7 +242,7 @@ Cubren: generación de slugs, `prep_time_display`, visibilidad de la vista públ
 - Build: `./build.sh` → `pip install` + `collectstatic` + `migrate`.
 - Start: `gunicorn vilas_carta.wsgi:application`.
 - Al crear el servicio, Render pedirá los valores de las variables con
-  `sync: false`: `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `CLOUDINARY_URL`.
+  `sync: false`: `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `IMGBB_API_KEY`.
 - `PYTHON_VERSION` está fijado en `3.14.6`. Si Render no lo tiene disponible,
   ajústalo a una versión soportada (p. ej. `3.14.3`).
 
@@ -226,6 +252,22 @@ Cubren: generación de slugs, `prep_time_display`, visibilidad de la vista públ
 python manage.py check --deploy
 python manage.py test
 ```
+
+## Notas y trampas (gotchas)
+
+- `modeltranslation` debe ir **antes** de `django.contrib.admin` en
+  `INSTALLED_APPS`; si no, el Admin falla al autodescubrir modelos.
+- Los `.mo` de `locale/` se **versionan**; el build de Render no recompila
+  traducciones (compílalos con `polib`, ver *Regenerar las traducciones*).
+- `media/` no se usa como storage: **todas** las imágenes se suben a ImgBB y en
+  la base de datos solo se guarda la URL absoluta.
+- ImgBB responde `code 103` ("forbidden") ante imágenes inválidas o demasiado
+  pequeñas (1×1); con una imagen real responde `200`. `code 100` = clave
+  inválida. No confundir ambos.
+- Reemplazar la imagen de un platillo deja huérfana la anterior en ImgBB: no se
+  puede borrar desde el servidor.
+- El storage por defecto debe ser `ImgBBStorage`; si no, revisa el bloque
+  `STORAGES` en `vilas_carta/settings.py`.
 
 ## Convenciones
 

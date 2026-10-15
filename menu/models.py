@@ -83,7 +83,13 @@ class Dish(TimeStampedModel):
         null=True,
         blank=True,
     )
-    image = models.ImageField('imagen', upload_to='dishes/', blank=True, null=True)
+    image = models.ImageField(
+        'imagen',
+        upload_to='dishes/',
+        max_length=255,
+        blank=True,
+        null=True,
+    )
     is_available = models.BooleanField('disponible', default=True)
     order = models.PositiveIntegerField('orden', default=0)
 

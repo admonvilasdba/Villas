@@ -4,48 +4,113 @@
 {% block title %}Vila's — {% translate "Carta" %}{% endblock %}
 
 {% block content %}
-<div class="menu">
-    <h1 class="menu__title">{% translate "Nuestra Carta" %}</h1>
+<h1 class="menu__title">
+    {% translate "Nuestra Carta" %}
+</h1>
+<div class="menu__title-rule" aria-hidden="true">
+    <span class="menu__title-rule__line"></span>
+    <span class="menu__title-rule__diamond"></span>
+    <span class="menu__title-rule__line"></span>
+</div>
 
-    {% for category in categories %}
-        <section class="menu-category" id="category-{{ category.slug }}">
-            <h2 class="menu-category__title">{{ category.name }}</h2>
+{% if categories %}
+    <nav class="menu-nav" aria-label="Categorías">
+        {% for category in categories %}
+            <a class="menu-nav__link" href="#{{ category.slug }}">{{ category.name }}</a>
+        {% endfor %}
+    </nav>
 
-            {% for subcategory in category.visible_subcategories %}
-                <div class="menu-subcategory" id="subcategory-{{ subcategory.slug }}">
-                    <h3 class="menu-subcategory__title">{{ subcategory.name }}</h3>
-
-                    <ul class="dish-list">
-                        {% for dish in subcategory.dishes.all %}
-                            <li class="dish" id="dish-{{ dish.pk }}">
-                                {% if dish.image %}
-                                    <img class="dish__image" src="{{ dish.image.url }}" alt="{{ dish.name }}" loading="lazy">
-                                {% endif %}
-
-                                <div class="dish__body">
-                                    <div class="dish__header">
-                                        <h4 class="dish__name">{{ dish.name }}</h4>
-                                        <span class="dish__price">{{ dish.price }}</span>
-                                    </div>
-
-                                    {% if dish.description %}
-                                        <p class="dish__description">{{ dish.description }}</p>
-                                    {% endif %}
-
-                                    {% if dish.prep_time_minutes %}
-                                        <p class="dish__prep-time">
-                                            {% translate "Tiempo de preparación" %}: {{ dish.prep_time_display }}
-                                        </p>
-                                    {% endif %}
-                                </div>
-                            </li>
-                        {% endfor %}
-                    </ul>
+    <div class="menu">
+        {% for category in categories %}
+            <section class="menu-category" id="{{ category.slug }}">
+                <div class="menu-category__rule" aria-hidden="true">
+                    <span class="menu-category__rule__line"></span>
+                    <h2 class="menu-category__title">{{ category.name }}</h2>
+                    <span class="menu-category__rule__line"></span>
                 </div>
-            {% endfor %}
-        </section>
-    {% empty %}
-        <p class="menu__empty">{% translate "La carta estará disponible pronto." %}</p>
-    {% endfor %}
+
+                {% for subcategory in category.visible_subcategories %}
+                    {% with dishes=subcategory.dishes.all %}
+                        <div class="menu-subcategory" id="{{ subcategory.slug }}">
+                            <h3 class="menu-subcategory__title">{{ subcategory.name }}</h3>
+
+                            <div class="dish-carousel">
+                                {% for dish in dishes %}
+                                    <article
+                                        class="dish"
+                                        id="dish-{{ dish.pk }}"
+                                        tabindex="0"
+                                        role="button"
+                                        aria-haspopup="dialog"
+                                        data-title="{{ dish.name }}"
+                                        data-desc="{{ dish.description }}"
+                                        data-price="{{ dish.price|floatformat:-2 }}"
+                                        {% if dish.prep_time_display %}data-time="{{ dish.prep_time_display }}"{% endif %}
+                                        {% if dish.image %}data-image="{{ dish.image.url }}"{% endif %}
+                                    >
+                                        {% if dish.image %}
+                                            <div class="dish__media">
+                                                <img class="dish__image" src="{{ dish.image.url }}" alt="{{ dish.name }}" loading="lazy">
+                                            </div>
+                                        {% endif %}
+
+                                        <div class="dish__body">
+                                            <h4 class="dish__name">{{ dish.name }}</h4>
+
+                                            {% if dish.description %}
+                                                <p class="dish__description">{{ dish.description }}</p>
+                                            {% endif %}
+
+                                            <div class="dish__meta">
+                                                <span class="dish__price"><span class="dish__price-currency">$</span>{{ dish.price|floatformat:-2 }}</span>
+                                                {% if dish.prep_time_display %}
+                                                    <span class="dish__prep-time">
+                                                        <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
+                                                        {{ dish.prep_time_display }}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </article>
+                                {% endfor %}
+                            </div>
+
+                            {% if dishes|length > 1 %}
+                                <div class="carousel-dots" data-dots-for="{{ subcategory.pk }}" aria-hidden="true">
+                                    {% for dish in dishes %}
+                                        <span class="carousel-dots__dot{% if forloop.first %} is-active{% endif %}"></span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endwith %}
+                {% endfor %}
+            </section>
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="menu__empty">{% translate "La carta estará disponible pronto." %}</p>
+{% endif %}
+
+<div class="modal" id="dish-modal" role="dialog" aria-modal="true" aria-label="{% translate 'Detalle de platillo' %}">
+    <div class="modal__panel">
+        <button class="modal__close" type="button" aria-label="Cerrar">
+            <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+        <div class="modal__media" id="modal-media">
+            <img class="modal__image" id="modal-image" alt="" hidden>
+        </div>
+        <div class="modal__content">
+            <h3 class="modal__name" id="modal-name"></h3>
+            <p class="modal__prep-time" id="modal-prep" hidden>
+                {% translate "Tiempo de preparación" %}: <span id="modal-time"></span>
+            </p>
+            <p class="modal__description" id="modal-desc"></p>
+            <p class="modal__price"><span class="modal__price-currency">$</span><span id="modal-price"></span></p>
+            <p class="modal__back">
+                <button type="button" class="modal__back-link" id="modal-back">{% translate "Volver a la carta" %}</button>
+            </p>
+        </div>
+    </div>
 </div>
 {% endblock %}

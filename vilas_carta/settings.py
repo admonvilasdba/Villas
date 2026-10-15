@@ -155,17 +155,12 @@ _static_backend = (
     else 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 )
 
-if config('CLOUDINARY_URL', default=''):
-    STORAGES = {
-        'default': {'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage'},
-        'staticfiles': {'BACKEND': _static_backend},
-    }
-    CLOUDINARY_STORAGE = {'SECURE': True}
-else:
-    STORAGES = {
-        'default': {'BACKEND': 'django.core.files.storage.FileSystemStorage'},
-        'staticfiles': {'BACKEND': _static_backend},
-    }
+IMGBB_API_KEY = config('IMGBB_API_KEY', default='')
+
+STORAGES = {
+    'default': {'BACKEND': 'menu.storage.ImgBBStorage'},
+    'staticfiles': {'BACKEND': _static_backend},
+}
 
 
 # Default primary key field type

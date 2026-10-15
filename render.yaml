@@ -26,7 +26,7 @@ services:
         sync: false
       - key: CSRF_TRUSTED_ORIGINS
         sync: false
-      - key: CLOUDINARY_URL
+      - key: IMGBB_API_KEY
         sync: false
       - key: TIME_ZONE
         value: 'America/Mexico_City'
