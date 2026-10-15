@@ -1,9 +1,12 @@
+import os
 from decimal import Decimal
 from unittest import mock
 
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import ContentFile
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
@@ -164,3 +167,49 @@ class ImgBBStorageTests(TestCase):
     def test_open_is_not_implemented(self):
         with self.assertRaises(NotImplementedError):
             self.storage._open('dishes/foto.jpg')
+
+
+class CreateAdminCommandTests(TestCase):
+    def _env(self, **values):
+        env = {
+            'DJANGO_SUPERUSER_USERNAME': '',
+            'DJANGO_SUPERUSER_EMAIL': '',
+            'DJANGO_SUPERUSER_PASSWORD': '',
+        }
+        env.update(values)
+        return mock.patch.dict(os.environ, env)
+
+    def test_skips_when_credentials_missing(self):
+        with self._env():
+            call_command('create_admin')
+        self.assertEqual(get_user_model().objects.count(), 0)
+
+    def test_creates_superuser_from_env(self):
+        with self._env(
+            DJANGO_SUPERUSER_USERNAME='VilasProd',
+            DJANGO_SUPERUSER_EMAIL='admin@vilas.test',
+            DJANGO_SUPERUSER_PASSWORD='ClaveSegura123',
+        ):
+            call_command('create_admin')
+
+        user = get_user_model().objects.get(username='VilasProd')
+        self.assertTrue(user.is_superuser)
+        self.assertTrue(user.is_staff)
+        self.assertEqual(user.email, 'admin@vilas.test')
+        self.assertTrue(user.check_password('ClaveSegura123'))
+
+    def test_is_idempotent_and_keeps_password(self):
+        with self._env(
+            DJANGO_SUPERUSER_USERNAME='VilasProd',
+            DJANGO_SUPERUSER_PASSWORD='ClaveOriginal123',
+        ):
+            call_command('create_admin')
+        with self._env(
+            DJANGO_SUPERUSER_USERNAME='VilasProd',
+            DJANGO_SUPERUSER_PASSWORD='ClaveNueva456',
+        ):
+            call_command('create_admin')
+
+        users = get_user_model().objects.filter(username='VilasProd')
+        self.assertEqual(users.count(), 1)
+        self.assertTrue(users.first().check_password('ClaveOriginal123'))

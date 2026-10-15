@@ -24,7 +24,7 @@ HTML semántico con clases listas para estilar.
 | Componente | Tecnología |
 |---|---|
 | Framework | Django 6.1 |
-| Base de datos | PostgreSQL en producción / SQLite en local |
+| Base de datos | PostgreSQL permanente en Supabase / SQLite en local |
 | Imágenes | ImgBB (`menu/storage.py`, backend de storage personalizado) |
 | Archivos estáticos | Whitenoise (producción) |
 | Traducciones | `django-modeltranslation` (contenido) + `gettext` (interfaz) |
@@ -39,7 +39,7 @@ vilas_carta/
 ├── manage.py
 ├── requirements.txt          # dependencias (generado con pip freeze)
 ├── build.sh                  # build de Render: instala, collectstatic, migrate
-├── render.yaml               # infraestructura como código (servicio + Postgres)
+├── render.yaml               # infraestructura como código (solo el servicio web)
 ├── .env.example              # plantilla de variables de entorno
 ├── vilas_carta/
 │   ├── settings.py           # configuración (lee variables de entorno)
@@ -75,9 +75,12 @@ El proyecto usa `python-decouple` y lee un archivo `.env` en la raíz
 | `DEBUG` | `True` en local, `False` en producción. |
 | `ALLOWED_HOSTS` | Hosts permitidos, separados por comas. |
 | `CSRF_TRUSTED_ORIGINS` | Orígenes de confianza para CSRF (dominio de Render y dominio propio). |
-| `DATABASE_URL` | Vacío en local (usa SQLite). En producción la provee Render. |
+| `DATABASE_URL` | Cadena de conexión a Supabase (producción). Vacío en local → SQLite. |
 | `TIME_ZONE` | Zona horaria (por defecto `America/Mexico_City`). |
 | `IMGBB_API_KEY` | Clave de API de ImgBB. Ver siguiente sección. |
+| `DJANGO_SUPERUSER_USERNAME` | Usuario del superusuario. Lo usa el comando `create_admin`. |
+| `DJANGO_SUPERUSER_EMAIL` | Correo del superusuario. Lo usa `create_admin`. |
+| `DJANGO_SUPERUSER_PASSWORD` | Contraseña del superusuario. Lo usa `create_admin` (nunca se registra en logs). |
 
 ### Dónde poner la clave de ImgBB
 
@@ -130,6 +133,24 @@ API).
 > **No** es un problema de la clave ni del código: con una imagen real la subida
 > devuelve `200` y la URL. Al probar, usa una imagen real. Una clave realmente
 > inválida da `code 100` ("Invalid API v1 key"), lo que permite distinguir ambas.
+
+## Base de datos (Supabase)
+
+En **producción** la base de datos es un **PostgreSQL permanente alojado en
+Supabase** (sustituye a la base *free* de Render, que caducaba a los 90 días).
+
+- `DATABASE_URL` contiene la **cadena de conexión de Supabase**. Se obtiene en el
+  Dashboard de Supabase → *Project Settings* → *Database* → *Connection string*.
+- **Recomendado:** usar la cadena del **Session Pooler**
+  (`aws-0-<region>.pooler.supabase.com:5432`). Soporta **IPv4** y es la más
+  compatible con Render en el plan free; la conexión directa (puerto 5432 del
+  host `db.<ref>.supabase.co`) puede ser **IPv6-only** y fallar.
+- **Esquema automático:** `build.sh` ejecuta `python manage.py migrate`, así que
+  el esquema se **crea y se mantiene solo** en Supabase en cada deploy. No hay
+  que ejecutar SQL a mano.
+- **SSL:** `settings.py` usa `ssl_require=not DEBUG`, por lo que en producción se
+  exige SSL (Supabase lo requiere; `dj-database-url` añade `sslmode=require`).
+- **Local** sigue usando **SQLite** cuando `DATABASE_URL` está vacío.
 
 ## Cómo correr en local
 
@@ -237,14 +258,40 @@ almacenamiento de imágenes (`ImgBBStorage`, con `requests` mockeado).
 
 ## Despliegue en Render
 
-`render.yaml` define el servicio web y la base de datos PostgreSQL.
+`render.yaml` define **solo el servicio web**; la base de datos es **externa
+(PostgreSQL en Supabase)** y se conecta vía la variable `DATABASE_URL`.
 
-- Build: `./build.sh` → `pip install` + `collectstatic` + `migrate`.
+- Build: `./build.sh` → `pip install` + `collectstatic` + `migrate` + `create_admin`.
 - Start: `gunicorn vilas_carta.wsgi:application`.
 - Al crear el servicio, Render pedirá los valores de las variables con
-  `sync: false`: `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`, `IMGBB_API_KEY`.
+  `sync: false`: `DATABASE_URL`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`,
+  `IMGBB_API_KEY`, `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL`,
+  `DJANGO_SUPERUSER_PASSWORD`.
 - `PYTHON_VERSION` está fijado en `3.14.6`. Si Render no lo tiene disponible,
   ajústalo a una versión soportada (p. ej. `3.14.3`).
+
+### Superusuario automático (`create_admin`)
+
+El plan gratuito de Render **no permite abrir una Shell interactiva**, así que el
+superusuario se crea solo durante el build con el comando `create_admin`
+(`menu/management/commands/create_admin.py`), que `build.sh` ejecuta tras
+`migrate`:
+
+```powershell
+python manage.py create_admin
+```
+
+- Lee `DJANGO_SUPERUSER_USERNAME`, `DJANGO_SUPERUSER_EMAIL` y
+  `DJANGO_SUPERUSER_PASSWORD` (vía `python-decouple`, como el resto de config).
+- Es **idempotente**: si el usuario ya existe, no lo toca (un cambio de
+  contraseña hecho en `/admin/` sobrevive a los deploys).
+- Si faltan `USERNAME` o `PASSWORD`, no hace nada y **no rompe el build**.
+- Nunca imprime la contraseña en los logs.
+- Como la base de Supabase es **permanente**, el admin se crea una sola vez; si
+  algún día la base se recrea, dejar las variables puestas hace que el próximo
+  build vuelva a crearlo.
+
+En local no es necesario: basta `python manage.py createsuperuser`.
 
 ### Checklist antes de desplegar
 
