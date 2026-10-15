@@ -43,40 +43,48 @@
     </main>
 
     <footer class="site-footer">
-        <div class="site-footer__zone site-footer__brand">
+        <div class="site-footer__zone site-footer__col1">
             <a class="site-footer__logo" href="{% url 'menu:index' %}" aria-label="Vila's">
                 <img class="site-footer__crest" src="{% static 'Imagenes/Logo.svg' %}" alt="">
-                <span class="site-footer__name">Vila's</span>
+                <span class="site-footer__name">VILA'S</span>
             </a>
+            <nav class="site-footer__links-group" aria-label="{% translate 'Navegación' %}">
+                <a class="site-footer__link" href="{% url 'menu:about' %}">
+                    <span class="material-symbols-outlined" aria-hidden="true">info</span> {% translate "Sobre nosotros" %}
+                </a>
+                <a class="site-footer__link" href="https://maps.google.com" target="_blank" rel="noopener noreferrer">
+                    <span class="material-symbols-outlined" aria-hidden="true">location_on</span> {% translate "Cómo llegar" %}
+                </a>
+            </nav>
+        </div>
+
+        <div class="site-footer__zone site-footer__col2">
             <p class="site-footer__slogan-text">"Vila's {% translate 'Su mejor opción' %} Desde Diciembre 2009"</p>
         </div>
 
-        <div class="site-footer__zone site-footer__social">
-            <a class="site-footer__link" href="https://www.facebook.com/profile.php?id=100063471143016" target="_blank" rel="noopener noreferrer">
-                <span class="material-symbols-outlined" aria-hidden="true">share</span> Facebook
-            </a>
-            <a class="site-footer__link" href="https://www.instagram.com/vilas_restaurante_" target="_blank" rel="noopener noreferrer">
-                <span class="material-symbols-outlined" aria-hidden="true">photo_camera</span> Instagram
-            </a>
-            <a class="site-footer__link" href="https://wa.me/50587378930" target="_blank" rel="noopener noreferrer">
-                <span class="material-symbols-outlined" aria-hidden="true">chat</span> WhatsApp
-            </a>
-            <a class="site-footer__link" href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer">
-                <span class="material-symbols-outlined" aria-hidden="true">music_note</span> TikTok
-            </a>
-            <a class="site-footer__link" href="tel:25342159">
-                <span class="material-symbols-outlined" aria-hidden="true">call</span> 2534-2159
-            </a>
+        <div class="site-footer__zone site-footer__col3">
+            <div class="site-footer__contact-grid">
+                <div class="site-footer__contact-col">
+                    <a class="site-footer__link" href="https://www.facebook.com/profile.php?id=100063471143016" target="_blank" rel="noopener noreferrer">
+                        <span class="material-symbols-outlined" aria-hidden="true">share</span> Facebook
+                    </a>
+                    <a class="site-footer__link" href="https://www.instagram.com/vilas_restaurante_" target="_blank" rel="noopener noreferrer">
+                        <span class="material-symbols-outlined" aria-hidden="true">photo_camera</span> Instagram
+                    </a>
+                    <a class="site-footer__link" href="https://wa.me/50587378930" target="_blank" rel="noopener noreferrer">
+                        <span class="material-symbols-outlined" aria-hidden="true">chat</span> WhatsApp
+                    </a>
+                </div>
+                <div class="site-footer__contact-col">
+                    <a class="site-footer__link" href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer">
+                        <span class="material-symbols-outlined" aria-hidden="true">music_note</span> TikTok
+                    </a>
+                    <a class="site-footer__link" href="tel:25342159">
+                        <span class="material-symbols-outlined" aria-hidden="true">call</span> 2534-2159
+                    </a>
+                </div>
+            </div>
         </div>
-
-        <nav class="site-footer__zone site-footer__nav" aria-label="{% translate 'Navegación' %}">
-            <a class="site-footer__link" href="{% url 'menu:about' %}">
-                <span class="material-symbols-outlined" aria-hidden="true">info</span> {% translate "Sobre nosotros" %}
-            </a>
-            <a class="site-footer__link" href="https://maps.google.com" target="_blank" rel="noopener noreferrer">
-                <span class="material-symbols-outlined" aria-hidden="true">location_on</span> {% translate "Cómo llegar" %}
-            </a>
-        </nav>
     </footer>
 
     <script src="{% static 'js/menu.js' %}" defer></script>
