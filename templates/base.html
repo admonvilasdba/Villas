@@ -1,4 +1,4 @@
-﻿{% load i18n static %}<!DOCTYPE html>
+{% load i18n static %}<!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
     <meta charset="utf-8">
@@ -38,52 +38,40 @@
     </main>
 
     <footer class="site-footer">
-        <div class="site-footer__zone site-footer__social">
-            <a class="site-footer__link" href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-                <span class="material-symbols-outlined" aria-hidden="true">share</span> Facebook
+        <div class="site-footer__zone site-footer__brand">
+            <a class="site-footer__logo" href="{% url 'menu:index' %}" aria-label="Vila's">
+                <img class="site-footer__crest" src="{% static 'Imagenes/Logo.svg' %}" alt="">
+                <span class="site-footer__name">Vila's</span>
             </a>
-            <a class="site-footer__link" href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-                <span class="material-symbols-outlined" aria-hidden="true">photo_camera</span> Instagram
-            </a>
-            <a class="site-footer__link" href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-                <span class="material-symbols-outlined" aria-hidden="true">music_note</span> TikTok
-            </a>
-            <a class="site-footer__link" href="{% url 'menu:index' %}#sobre-nosotros" aria-label="{% translate 'Sobre nosotros' %}">
-                <span class="material-symbols-outlined" aria-hidden="true">info</span> {% translate "Sobre nosotros" %}
-            </a>
-        </div>
-
-        <div class="site-footer__zone site-footer__slogan">
             <p class="site-footer__slogan-text">"Vila's {% translate 'Su mejor opción' %} Desde Diciembre 2009"</p>
         </div>
 
-        <div class="site-footer__zone site-footer__about" id="sobre-nosotros">
-            <h3 class="site-footer__title">{% translate 'Acerca de nosotros' %}</h3>
-            <p class="site-footer__text">{% translate "Vila's Restaurante nace de la unión de los nombres de sus propietarios, Vigarny y Laura, y de un sueño que comenzó en Diriamba, Nicaragua, en diciembre de 2009." %}</p>
-            <p class="site-footer__text">{% translate "Desde sus inicios, Vila's fue concebido como un espacio donde la gastronomía, el ambiente y la hospitalidad formaran parte de una misma experiencia. Un lugar atractivo, acogedor y cercano, creado para disfrutar de una buena mesa, descubrir sabores de nuestra tierra y encontrarse también con propuestas inspiradas en diferentes culturas y estilos gastronómicos." %}</p>
-            <p class="site-footer__text">{% translate "Con el paso de los años, Vila's ha construido su propia identidad: un lugar para compartir, celebrar y disfrutar, donde cada visita busca convertirse en un momento que vale la pena recordar." %}</p>
-            <p class="site-footer__text">{% translate "Vila's: una historia que nació en Diriamba y continúa creciendo alrededor de la mesa." %}</p>
-        </div>
-
-        <div class="site-footer__zone site-footer__location">
-            <span class="site-footer__name">Vila's</span>
+        <div class="site-footer__zone site-footer__social">
             <a class="site-footer__link" href="https://www.facebook.com/profile.php?id=100063471143016" target="_blank" rel="noopener noreferrer">
-                <span class="material-symbols-outlined" aria-hidden="true">share</span> {% translate "Facebook: Vila's Restaurante, Diriamba Carazo" %}
+                <span class="material-symbols-outlined" aria-hidden="true">share</span> Facebook
             </a>
             <a class="site-footer__link" href="https://www.instagram.com/vilas_restaurante_" target="_blank" rel="noopener noreferrer">
-                <span class="material-symbols-outlined" aria-hidden="true">photo_camera</span> {% translate "Instagram: @vilas_restaurante_" %}
+                <span class="material-symbols-outlined" aria-hidden="true">photo_camera</span> Instagram
             </a>
             <a class="site-footer__link" href="https://wa.me/50587378930" target="_blank" rel="noopener noreferrer">
-                <span class="material-symbols-outlined" aria-hidden="true">chat</span> {% translate "WhatsApp: +505 87378930" %}
+                <span class="material-symbols-outlined" aria-hidden="true">chat</span> WhatsApp
+            </a>
+            <a class="site-footer__link" href="https://www.tiktok.com" target="_blank" rel="noopener noreferrer">
+                <span class="material-symbols-outlined" aria-hidden="true">music_note</span> TikTok
             </a>
             <a class="site-footer__link" href="tel:25342159">
-                <span class="material-symbols-outlined" aria-hidden="true">call</span> {% translate "Teléfono: 2534-2159" %}
-            </a>
-            <a class="site-footer__link" href="https://maps.google.com" target="_blank" rel="noopener noreferrer">
-                <span class="material-symbols-outlined" aria-hidden="true">location_on</span>
-                {% translate "Cómo llegar" %}
+                <span class="material-symbols-outlined" aria-hidden="true">call</span> 2534-2159
             </a>
         </div>
+
+        <nav class="site-footer__zone site-footer__nav" aria-label="{% translate 'Navegación' %}">
+            <a class="site-footer__link" href="{% url 'menu:index' %}#about-us">
+                <span class="material-symbols-outlined" aria-hidden="true">info</span> {% translate "Sobre nosotros" %}
+            </a>
+            <a class="site-footer__link" href="https://maps.google.com" target="_blank" rel="noopener noreferrer">
+                <span class="material-symbols-outlined" aria-hidden="true">location_on</span> {% translate "Cómo llegar" %}
+            </a>
+        </nav>
     </footer>
 
     <script src="{% static 'js/menu.js' %}" defer></script>

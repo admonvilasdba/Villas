@@ -79,14 +79,5 @@ msgid ""
 msgstr ""
 "Vila's: a story born in Diriamba that continues to grow around the table."
 
-msgid "Facebook: Vila's Restaurante, Diriamba Carazo"
-msgstr "Facebook: Vila's Restaurant, Diriamba Carazo"
-
-msgid "Instagram: @vilas_restaurante_"
-msgstr "Instagram: @vilas_restaurante_"
-
-msgid "WhatsApp: +505 87378930"
-msgstr "WhatsApp: +505 87378930"
-
-msgid "Teléfono: 2534-2159"
-msgstr "Phone: 2534-2159"
+msgid "Navegación"
+msgstr "Navigation"

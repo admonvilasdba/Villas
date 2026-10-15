@@ -108,6 +108,19 @@ class MenuViewTests(TestCase):
         response = self.client.get('/en/')
         self.assertContains(response, 'Our Menu')
 
+    def test_about_section_renders_with_anchor(self):
+        response = self.client.get('/es/')
+        self.assertContains(response, 'id="about-us"')
+        self.assertContains(response, "Vila's Restaurante nace")
+
+    def test_footer_links_to_about_anchor(self):
+        response = self.client.get('/es/')
+        self.assertContains(response, '#about-us')
+
+    def test_about_section_english_translation(self):
+        response = self.client.get('/en/')
+        self.assertContains(response, "Vila's Restaurant was born")
+
 
 class AdminRegistrationTests(TestCase):
     def test_models_registered_in_admin(self):

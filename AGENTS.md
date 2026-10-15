@@ -19,6 +19,33 @@ El frontend público es HTML/CSS/JS servido con plantillas de Django. El diseño
 visual se trabaja aparte (Stitch); este repositorio contiene el backend y el
 HTML semántico con clases listas para estilar.
 
+## Qué se implementó (resumen y decisiones)
+
+El proyecto ya es desplegable en Render. Resumen de lo construido y de las
+decisiones tomadas (para no repetir caminos ya descartados):
+
+- **Backend Django** (`menu/`): modelos `Category`/`SubCategory`/`Dish`, Admin
+  con pestañas ES/EN e inlines, y vista pública `MenuView` que oculta lo vacío o
+  agotado.
+- **Imágenes con ImgBB**: se evaluó Cloudinary primero, pero se descartó por
+  bloqueos de acceso desde Nicaragua. Se implementó el storage propio
+  `ImgBBStorage` (`menu/storage.py`), que sube cada imagen a ImgBB y guarda la
+  **URL directa** en la base de datos.
+- **Base de datos en Supabase**: la base *free* de Render caducaba a los 90 días;
+  se pasó a un **PostgreSQL permanente en Supabase**, conectado por `DATABASE_URL`.
+- **Superusuario automático**: el plan free de Render no permite Shell interactiva,
+  así que `create_admin` (`menu/management/commands/create_admin.py`) lo crea
+  durante el build a partir de las variables `DJANGO_SUPERUSER_*`.
+- **Interfaz ES/EN**: contenido con `django-modeltranslation` y textos de interfaz
+  con gettext (`.mo` compilados con `polib`).
+- **Diseño**: tema oscuro y assets en `static/` (`css/menu.css`, `js/menu.js`,
+  `Imagenes/Logo.svg`); la referencia visual está en `docs/pantallas-stitch.md`.
+- **Pruebas**: `python manage.py test` cubre modelos, vista, admin, storage y el
+  comando `create_admin` (26 pruebas).
+
+> Historial: Cloudinary y la base *free* de Render se evaluaron y se descartaron;
+> no queda ninguna dependencia de ellos en el proyecto.
+
 ## Stack
 
 | Componente | Tecnología |
@@ -38,7 +65,7 @@ HTML semántico con clases listas para estilar.
 vilas_carta/
 ├── manage.py
 ├── requirements.txt          # dependencias (generado con pip freeze)
-├── build.sh                  # build de Render: instala, collectstatic, migrate
+├── build.sh                  # build de Render: instala, collectstatic, migrate, create_admin
 ├── render.yaml               # infraestructura como código (solo el servicio web)
 ├── .env.example              # plantilla de variables de entorno
 ├── vilas_carta/
@@ -53,13 +80,19 @@ vilas_carta/
 │   ├── storage.py            # ImgBBStorage (sube imágenes a ImgBB, guarda URL)
 │   ├── views.py              # MenuView (vista pública)
 │   ├── urls.py               # rutas de la app
-│   ├── tests.py              # tests de modelos, vista, admin y storage
+│   ├── tests.py              # tests de modelos, vista, admin, storage y create_admin
+│   ├── management/commands/
+│   │   └── create_admin.py   # crea el superusuario desde DJANGO_SUPERUSER_*
 │   └── migrations/           # 0001_initial, 0002_alter_dish_image
 ├── templates/
 │   ├── base.html             # layout + selector de idioma + footer
-│   └── menu/index.html       # carta pública
-├── static/css/menu.css       # estilos del tema oscuro (aprobado en Stitch)
+│   └── menu/index.html       # carta pública + sección "Sobre nosotros" (#about-us)
+├── static/
+│   ├── css/menu.css          # estilos del tema oscuro (aprobado en Stitch)
+│   ├── js/menu.js            # interacciones de la carta
+│   └── Imagenes/Logo.svg     # logo
 ├── locale/en/LC_MESSAGES/    # traducciones de interfaz (.po fuente + .mo compilado)
+├── docs/pantallas-stitch.md  # especificación visual de las pantallas (Stitch)
 ├── media/                    # MEDIA_ROOT de referencia; sin uso (imágenes en ImgBB; ignorado por git)
 └── staticfiles/              # salida de collectstatic (ignorado por git)
 ```
@@ -244,9 +277,11 @@ python -c "import polib; polib.pofile(r'locale/en/LC_MESSAGES/django.po').save_a
 python manage.py test
 ```
 
-Cubren: generación de slugs, `prep_time_display`, visibilidad de la vista pública
-(solo activos y disponibles), prefijos de idioma, la traducción de interfaz y el
-almacenamiento de imágenes (`ImgBBStorage`, con `requests` mockeado).
+Cubren (26 pruebas): generación de slugs, `prep_time_display`, visibilidad de la
+vista pública (solo activos y disponibles), prefijos de idioma, la traducción de
+interfaz, la sección "Sobre nosotros" (`#about-us`), el almacenamiento de imágenes
+(`ImgBBStorage`, con `requests` mockeado) y el comando `create_admin` (omisión sin
+variables, creación e idempotencia).
 
 ## Estáticos y multimedia
 
