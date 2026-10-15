@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}Vila's — {% translate "Sobre nosotros" %}{% endblock %}
+
+{% block content %}
+<h1 class="menu__title">{% translate "Acerca de nosotros" %}</h1>
+<div class="menu__title-rule" aria-hidden="true">
+    <span class="menu__title-rule__line"></span>
+    <span class="menu__title-rule__diamond"></span>
+    <span class="menu__title-rule__line"></span>
+</div>
+
+<section class="about" aria-labelledby="about-title">
+    <div class="about__body">
+        <p class="about__text">{% translate "Vila's Restaurante nace de la unión de los nombres de sus propietarios, Vigarny y Laura, y de un sueño que comenzó en Diriamba, Nicaragua, en diciembre de 2009." %}</p>
+        <p class="about__text">{% translate "Desde sus inicios, Vila's fue concebido como un espacio donde la gastronomía, el ambiente y la hospitalidad formaran parte de una misma experiencia. Un lugar atractivo, acogedor y cercano, creado para disfrutar de una buena mesa, descubrir sabores de nuestra tierra y encontrarse también con propuestas inspiradas en diferentes culturas y estilos gastronómicos." %}</p>
+        <p class="about__text">{% translate "Con el paso de los años, Vila's ha construido su propia identidad: un lugar para compartir, celebrar y disfrutar, donde cada visita busca convertirse en un momento que vale la pena recordar." %}</p>
+        <p class="about__text">{% translate "Vila's: una historia que nació en Diriamba y continúa creciendo alrededor de la mesa." %}</p>
+    </div>
+</section>
+{% endblock %}
