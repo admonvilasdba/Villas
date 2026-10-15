@@ -1,5 +1,5 @@
 from django.db.models import Prefetch
-from django.views.generic import ListView
+from django.views.generic import ListView, TemplateView
 
 from .models import Category, Dish, SubCategory
 
@@ -31,3 +31,7 @@ class MenuView(ListView):
                 visible.append(category)
         context['categories'] = visible
         return context
+
+
+class AboutView(TemplateView):
+    template_name = 'menu/about.html'

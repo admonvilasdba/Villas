@@ -17,6 +17,11 @@
             <span class="site-logo__name">Vila's</span>
         </a>
 
+        <nav class="site-header__nav" aria-label="{% translate 'Navegación' %}">
+            <a class="site-header__link" href="{% url 'menu:index' %}">{% translate 'Carta' %}</a>
+            <a class="site-header__link" href="{% url 'menu:about' %}">{% translate 'Sobre nosotros' %}</a>
+        </nav>
+
         <form class="language-switcher" action="{% url 'set_language' %}" method="post">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -65,7 +70,7 @@
         </div>
 
         <nav class="site-footer__zone site-footer__nav" aria-label="{% translate 'Navegación' %}">
-            <a class="site-footer__link" href="{% url 'menu:index' %}#about-us">
+            <a class="site-footer__link" href="{% url 'menu:about' %}">
                 <span class="material-symbols-outlined" aria-hidden="true">info</span> {% translate "Sobre nosotros" %}
             </a>
             <a class="site-footer__link" href="https://maps.google.com" target="_blank" rel="noopener noreferrer">

@@ -108,18 +108,32 @@ class MenuViewTests(TestCase):
         response = self.client.get('/en/')
         self.assertContains(response, 'Our Menu')
 
-    def test_about_section_renders_with_anchor(self):
-        response = self.client.get('/es/')
-        self.assertContains(response, 'id="about-us"')
+    def test_about_url_spanish(self):
+        with translation.override('es'):
+            self.assertEqual(reverse('menu:about'), '/es/sobre-nosotros/')
+
+    def test_about_url_english(self):
+        with translation.override('en'):
+            self.assertEqual(reverse('menu:about'), '/en/about-us/')
+
+    def test_about_page_renders(self):
+        response = self.client.get('/es/sobre-nosotros/')
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Vila's Restaurante nace")
 
-    def test_footer_links_to_about_anchor(self):
-        response = self.client.get('/es/')
-        self.assertContains(response, '#about-us')
-
-    def test_about_section_english_translation(self):
-        response = self.client.get('/en/')
+    def test_about_page_english(self):
+        response = self.client.get('/en/about-us/')
+        self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Vila's Restaurant was born")
+
+    def test_index_has_no_about_section(self):
+        response = self.client.get('/es/')
+        self.assertNotContains(response, 'id="about-us"')
+        self.assertNotContains(response, "Vila's Restaurante nace")
+
+    def test_footer_links_to_about_page(self):
+        response = self.client.get('/es/')
+        self.assertContains(response, reverse('menu:about'))
 
 
 class AdminRegistrationTests(TestCase):

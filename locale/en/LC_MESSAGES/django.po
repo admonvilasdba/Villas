@@ -81,3 +81,6 @@ msgstr ""
 
 msgid "Navegación"
 msgstr "Navigation"
+
+msgid "sobre-nosotros/"
+msgstr "about-us/"
