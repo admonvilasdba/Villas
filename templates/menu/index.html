@@ -62,7 +62,7 @@
                                             {% endif %}
 
                                             <div class="dish__meta">
-                                                <span class="dish__price"><span class="dish__price-currency">$</span>{{ dish.price|floatformat:-2 }}</span>
+                                                <span class="dish__price"><span class="dish__price-currency">C$</span>{{ dish.price|floatformat:-2 }}</span>
                                                 {% if dish.prep_time_display %}
                                                     <span class="dish__prep-time">
                                                         <span class="material-symbols-outlined" aria-hidden="true">schedule</span>
@@ -108,7 +108,7 @@
                 {% translate "Tiempo de preparación" %}: <span id="modal-time"></span>
             </p>
             <p class="modal__description" id="modal-desc"></p>
-            <p class="modal__price"><span class="modal__price-currency">$</span><span id="modal-price"></span></p>
+            <p class="modal__price"><span class="modal__price-currency">C$</span><span id="modal-price"></span></p>
             <p class="modal__back">
                 <button type="button" class="modal__back-link" id="modal-back">{% translate "Volver a la carta" %}</button>
             </p>
