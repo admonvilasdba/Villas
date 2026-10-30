@@ -108,6 +108,14 @@ class MenuViewTests(TestCase):
         response = self.client.get('/en/')
         self.assertContains(response, 'Our Menu')
 
+    def test_header_has_no_nav_links(self):
+        response = self.client.get('/es/')
+        self.assertNotContains(response, 'site-header__nav')
+
+    def test_favicon_is_linked(self):
+        response = self.client.get('/es/')
+        self.assertContains(response, 'Imagenes/Icono.svg')
+
     def test_about_url_spanish(self):
         with translation.override('es'):
             self.assertEqual(reverse('menu:about'), '/es/sobre-nosotros/')

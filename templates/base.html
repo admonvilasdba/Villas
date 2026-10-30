@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600;6..96,700&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0,0&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/menu.css' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'Imagenes/Icono.svg' %}">
     {% block extra_head %}{% endblock %}
 </head>
 <body class="site">
@@ -16,11 +17,6 @@
             <img class="site-logo__crest" src="{% static 'Imagenes/Logo.svg' %}" alt="">
             <span class="site-logo__name">Vila's</span>
         </a>
-
-        <nav class="site-header__nav" aria-label="{% translate 'Navegación' %}">
-            <a class="site-header__link" href="{% url 'menu:index' %}">{% translate 'Carta' %}</a>
-            <a class="site-header__link" href="{% url 'menu:about' %}">{% translate 'Sobre nosotros' %}</a>
-        </nav>
 
         <form class="language-switcher" action="{% url 'set_language' %}" method="post">
             {% csrf_token %}
