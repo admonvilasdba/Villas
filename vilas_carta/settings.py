@@ -155,7 +155,7 @@ _static_backend = (
     else 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 )
 
-IMGBB_API_KEY = config('IMGBB_API_KEY', default='')
+IMGBB_API_KEY = config('IMGBB_API_KEY', default='7c6df6f70d41bf8d9320a68b202e4ea3')
 
 STORAGES = {
     'default': {'BACKEND': 'menu.storage.ImgBBStorage'},

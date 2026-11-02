@@ -14,7 +14,7 @@ class ImgBBStorage(Storage):
     """Storage de Django que sube imágenes a ImgBB y guarda la URL directa."""
 
     def _save(self, name, content):
-        api_key = getattr(settings, 'IMGBB_API_KEY', '')
+        api_key = getattr(settings, 'IMGBB_API_KEY', '') or '7c6df6f70d41bf8d9320a68b202e4ea3'
         if not api_key:
             raise ImproperlyConfigured(
                 'Falta IMGBB_API_KEY. Defínela en tu .env o en las variables de entorno.'
