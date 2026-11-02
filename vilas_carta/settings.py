@@ -157,8 +157,31 @@ _static_backend = (
 
 IMGBB_API_KEY = config('IMGBB_API_KEY', default='7c6df6f70d41bf8d9320a68b202e4ea3')
 
+# Supabase Storage (S3-compatible)
+SUPABASE_URL = config('SUPABASE_URL', default='')
+SUPABASE_S3_ACCESS_KEY_ID = config('SUPABASE_S3_ACCESS_KEY_ID', default='')
+SUPABASE_S3_SECRET_ACCESS_KEY = config('SUPABASE_S3_SECRET_ACCESS_KEY', default='')
+SUPABASE_BUCKET_NAME = config('SUPABASE_BUCKET_NAME', default='imagenes')
+SUPABASE_S3_REGION_NAME = config('SUPABASE_S3_REGION_NAME', default='auto')
+SUPABASE_S3_ENDPOINT_URL = config(
+    'SUPABASE_S3_ENDPOINT_URL',
+    default=f'{SUPABASE_URL}/storage/v1/s3' if SUPABASE_URL else '',
+)
+
+AWS_ACCESS_KEY_ID = SUPABASE_S3_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = SUPABASE_S3_SECRET_ACCESS_KEY
+AWS_STORAGE_BUCKET_NAME = SUPABASE_BUCKET_NAME
+AWS_S3_ENDPOINT_URL = SUPABASE_S3_ENDPOINT_URL
+AWS_S3_REGION_NAME = SUPABASE_S3_REGION_NAME
+AWS_S3_ADDRESSING_STYLE = 'path'
+AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False
+AWS_S3_FILE_OVERWRITE = False
+AWS_LOCATION = 'dishes/'
+
 STORAGES = {
-    'default': {'BACKEND': 'menu.storage.ImgBBStorage'},
+    'default': {'BACKEND': 'menu.storage.SupabaseS3Storage'},
     'staticfiles': {'BACKEND': _static_backend},
 }
 

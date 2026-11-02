@@ -1,57 +1,16 @@
-import os
-
-import requests
 from django.conf import settings
-from django.core.exceptions import ImproperlyConfigured
-from django.core.files.storage import Storage
-from django.utils.deconstruct import deconstructible
-
-IMGBB_UPLOAD_URL = 'https://api.imgbb.com/1/upload'
+from storages.backends.s3boto3 import S3Boto3Storage
 
 
-@deconstructible
-class ImgBBStorage(Storage):
-    """Storage de Django que sube imágenes a ImgBB y guarda la URL directa."""
+class SupabaseS3Storage(S3Boto3Storage):
+    """Storage compatible con Supabase S3. Mantiene compatibilidad con URLs antiguas."""
 
-    def _save(self, name, content):
-        api_key = getattr(settings, 'IMGBB_API_KEY', '') or '7c6df6f70d41bf8d9320a68b202e4ea3'
-        if not api_key:
-            raise ImproperlyConfigured(
-                'Falta IMGBB_API_KEY. Defínela en tu .env o en las variables de entorno.'
-            )
-
-        content.seek(0)
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-        }
-        response = requests.post(
-            IMGBB_UPLOAD_URL,
-            params={'key': api_key},
-            files={'image': (os.path.basename(name), content.read())},
-            headers=headers,
-            timeout=30,
-        )
-
-        try:
-            result = response.json()
-        except ValueError as exc:
-            raise RuntimeError(
-                f'ImgBB respondió algo que no es JSON (HTTP {response.status_code}).'
-            ) from exc
-
-        if response.status_code == 200 and result.get('success') is True:
-            return result['data']['url']
-
-        raise RuntimeError(f'Error al subir la imagen a ImgBB: {result}')
-
-    def _open(self, name, mode='rb'):
-        raise NotImplementedError('ImgBBStorage no permite leer archivos.')
-
-    def exists(self, name):
-        return False
+    location = 'dishes'
+    file_overwrite = False
+    default_acl = None
+    querystring_auth = False
 
     def url(self, name):
-        return name
-
-    def delete(self, name):
-        pass
+        if name and (name.startswith('http://') or name.startswith('https://')):
+            return name
+        return super().url(name)
