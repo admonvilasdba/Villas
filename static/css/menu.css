@@ -708,8 +708,45 @@ img {
     }
 }
 
-@media (prefers-reduced-motion: reduce) {
-    * {
-        transition: none !important;
-    }
+/* Botón Volver a la carta */
+.modal__back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    margin-top: 1.25rem;
+    padding: 0.55rem 1.6rem;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    background: #997A15;
+    color: #FFFFFF;
+    border: 1px solid #997A15;
+    border-radius: 999px;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    box-shadow: none;
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.modal__back-link:hover,
+.modal__back-link:focus-visible {
+    background: #b08a1d;
+    border-color: #b08a1d;
+    color: #FFFFFF;
+    box-shadow: 0 10px 24px -12px rgba(153, 122, 21, 0.8);
+    transform: translateY(-1px);
+}
+
+.modal__back-link:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 14px -12px rgba(153, 122, 21, 0.7);
+}
+
+.modal__back-link:focus-visible {
+    outline: 2px solid rgba(176, 138, 29, 0.6);
+    outline-offset: 2px;
 }
