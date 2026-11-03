@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import dj_database_url
 from decouple import Csv, config
@@ -158,7 +159,7 @@ _static_backend = (
 IMGBB_API_KEY = config('IMGBB_API_KEY', default='7c6df6f70d41bf8d9320a68b202e4ea3')
 
 # Supabase Storage (S3-compatible)
-SUPABASE_URL = config('SUPABASE_URL', default='')
+SUPABASE_URL = config('SUPABASE_URL', default='').rstrip('/')
 SUPABASE_S3_ACCESS_KEY_ID = config('SUPABASE_S3_ACCESS_KEY_ID', default='')
 SUPABASE_S3_SECRET_ACCESS_KEY = config('SUPABASE_S3_SECRET_ACCESS_KEY', default='')
 SUPABASE_BUCKET_NAME = config('SUPABASE_BUCKET_NAME', default='imagenes')
@@ -166,6 +167,19 @@ SUPABASE_S3_REGION_NAME = config('SUPABASE_S3_REGION_NAME', default='auto')
 SUPABASE_S3_ENDPOINT_URL = config(
     'SUPABASE_S3_ENDPOINT_URL',
     default=f'{SUPABASE_URL}/storage/v1/s3' if SUPABASE_URL else '',
+)
+SUPABASE_STORAGE_PUBLIC_URL = config(
+    'SUPABASE_STORAGE_PUBLIC_URL',
+    default=(
+        f'{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET_NAME}'
+        if SUPABASE_URL else ''
+    ),
+).rstrip('/')
+
+_supabase_public = urlsplit(SUPABASE_STORAGE_PUBLIC_URL)
+AWS_S3_CUSTOM_DOMAIN = (
+    f'{_supabase_public.netloc}{_supabase_public.path}'.rstrip('/')
+    if _supabase_public.netloc else None
 )
 
 AWS_ACCESS_KEY_ID = SUPABASE_S3_ACCESS_KEY_ID
@@ -175,6 +189,7 @@ AWS_S3_ENDPOINT_URL = SUPABASE_S3_ENDPOINT_URL
 AWS_S3_REGION_NAME = SUPABASE_S3_REGION_NAME
 AWS_S3_ADDRESSING_STYLE = 'path'
 AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_URL_PROTOCOL = 'https:'
 AWS_DEFAULT_ACL = None
 AWS_QUERYSTRING_AUTH = False
 AWS_S3_FILE_OVERWRITE = False

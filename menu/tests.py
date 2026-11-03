@@ -4,15 +4,13 @@ from unittest import mock
 
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ImproperlyConfigured
-from django.core.files.base import ContentFile
 from django.core.management import call_command
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import translation
 
 from .models import Category, Dish, SubCategory
-from .storage import ImgBBStorage
+from .storage import SupabaseS3Storage
 
 
 class ModelTests(TestCase):
@@ -151,57 +149,39 @@ class AdminRegistrationTests(TestCase):
         self.assertTrue(admin.site.is_registered(Dish))
 
 
-class ImgBBStorageTests(TestCase):
-    def setUp(self):
-        self.storage = ImgBBStorage()
+class SupabaseStorageTests(TestCase):
+    @override_settings(
+        SUPABASE_STORAGE_PUBLIC_URL='https://abc.supabase.co/storage/v1/object/public/imagenes',
+        AWS_STORAGE_BUCKET_NAME='imagenes',
+        AWS_LOCATION='dishes/',
+    )
+    def test_url_returns_public_read_path(self):
+        storage = SupabaseS3Storage()
+        url = storage.url('dishes/foto.jpg')
 
-    @override_settings(IMGBB_API_KEY='test-key')
-    def test_save_returns_direct_url_on_success(self):
-        content = ContentFile(b'fake-image-bytes', name='foto.jpg')
-        response = mock.Mock(status_code=200)
-        response.json.return_value = {
-            'success': True,
-            'data': {'url': 'https://i.ibb.co/abc/foto.jpg'},
-        }
-        with mock.patch('menu.storage.requests.post', return_value=response) as post:
-            result = self.storage._save('dishes/foto.jpg', content)
+        self.assertEqual(
+            url,
+            'https://abc.supabase.co/storage/v1/object/public/imagenes/dishes/dishes/foto.jpg',
+        )
+        self.assertNotIn('?', url)
 
-        self.assertEqual(result, 'https://i.ibb.co/abc/foto.jpg')
-        self.assertEqual(post.call_args.kwargs['params'], {'key': 'test-key'})
-        self.assertEqual(post.call_args.kwargs['files']['image'][0], 'foto.jpg')
+    @override_settings(
+        SUPABASE_STORAGE_PUBLIC_URL='https://abc.supabase.co/storage/v1/object/public/imagenes',
+        AWS_STORAGE_BUCKET_NAME='imagenes',
+        AWS_LOCATION='dishes/',
+    )
+    def test_url_encodes_special_characters(self):
+        storage = SupabaseS3Storage()
 
-    @override_settings(IMGBB_API_KEY='test-key')
-    def test_save_raises_when_api_reports_failure(self):
-        content = ContentFile(b'fake-image-bytes', name='foto.jpg')
-        response = mock.Mock(status_code=200)
-        response.json.return_value = {'success': False, 'error': {'message': 'boom'}}
-        with mock.patch('menu.storage.requests.post', return_value=response):
-            with self.assertRaises(RuntimeError):
-                self.storage._save('dishes/foto.jpg', content)
+        url = storage.url('dishes/foto con espacio.jpg')
 
-    @override_settings(IMGBB_API_KEY='test-key')
-    def test_save_raises_on_non_200_status(self):
-        content = ContentFile(b'fake-image-bytes', name='foto.jpg')
-        response = mock.Mock(status_code=500)
-        response.json.return_value = {'success': True, 'data': {'url': 'x'}}
-        with mock.patch('menu.storage.requests.post', return_value=response):
-            with self.assertRaises(RuntimeError):
-                self.storage._save('dishes/foto.jpg', content)
+        self.assertTrue(url.endswith('foto%20con%20espacio.jpg'))
 
-    @override_settings(IMGBB_API_KEY='')
-    def test_save_without_api_key_raises_improperly_configured(self):
-        content = ContentFile(b'fake-image-bytes', name='foto.jpg')
-        with self.assertRaises(ImproperlyConfigured):
-            self.storage._save('dishes/foto.jpg', content)
-
-    def test_url_returns_name_and_exists_is_false(self):
+    def test_url_returns_legacy_absolute_url(self):
+        storage = SupabaseS3Storage()
         url = 'https://i.ibb.co/abc/foto.jpg'
-        self.assertEqual(self.storage.url(url), url)
-        self.assertFalse(self.storage.exists('dishes/foto.jpg'))
 
-    def test_open_is_not_implemented(self):
-        with self.assertRaises(NotImplementedError):
-            self.storage._open('dishes/foto.jpg')
+        self.assertEqual(storage.url(url), url)
 
 
 class CreateAdminCommandTests(TestCase):
