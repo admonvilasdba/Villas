@@ -80,6 +80,57 @@ class MenuViewTests(TestCase):
         self.assertIn(self.available, dishes)
         self.assertNotIn(self.sold_out, dishes)
 
+    def test_mixed_subcategory_reserves_media_with_placeholder(self):
+        self.available.image = 'https://example.com/bistec.jpg'
+        self.available.save(update_fields=['image'])
+        Dish.objects.create(
+            subcategory=self.subcategory,
+            name='Sin foto',
+            price=Decimal('10.00'),
+            is_available=True,
+        )
+
+        response = self.client.get(reverse('menu:index'))
+
+        self.assertContains(response, 'class="dish__media is-loading"')
+        self.assertContains(response, 'dish__media--placeholder')
+
+    def test_subcategory_without_images_keeps_cards_compact(self):
+        response = self.client.get(reverse('menu:index'))
+        self.assertNotContains(response, 'class="dish__media')
+
+    def test_image_space_is_decided_per_subcategory(self):
+        self.available.image = 'https://example.com/bistec.jpg'
+        self.available.save(update_fields=['image'])
+        pizzas = SubCategory.objects.create(
+            category=self.category, name='Pizzas', order=2
+        )
+        Dish.objects.create(
+            subcategory=pizzas,
+            name='Pizza',
+            price=Decimal('18.00'),
+            is_available=True,
+        )
+
+        response = self.client.get(reverse('menu:index'))
+
+        subcategories = {
+            subcategory.name: subcategory
+            for subcategory in response.context['categories'][0].visible_subcategories
+        }
+        self.assertTrue(subcategories['Carnes'].has_dish_images)
+        self.assertFalse(subcategories['Pizzas'].has_dish_images)
+
+    def test_sold_out_dish_image_does_not_reserve_space(self):
+        self.sold_out.image = 'https://example.com/pollo.jpg'
+        self.sold_out.save(update_fields=['image'])
+
+        response = self.client.get(reverse('menu:index'))
+
+        subcategory = response.context['categories'][0].visible_subcategories[0]
+        self.assertFalse(subcategory.has_dish_images)
+        self.assertNotContains(response, 'class="dish__media')
+
     def test_inactive_category_is_hidden(self):
         inactive = Category.objects.create(name='Oculta', is_active=False)
         SubCategory.objects.create(category=inactive, name='Sub')

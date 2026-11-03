@@ -25,7 +25,13 @@ class MenuView(ListView):
         context = super().get_context_data(**kwargs)
         visible = []
         for category in context['categories']:
-            subcategories = [s for s in category.subcategories.all() if s.dishes.all()]
+            subcategories = []
+            for subcategory in category.subcategories.all():
+                dishes = list(subcategory.dishes.all())
+                if not dishes:
+                    continue
+                subcategory.has_dish_images = any(dish.image for dish in dishes)
+                subcategories.append(subcategory)
             if subcategories:
                 category.visible_subcategories = subcategories
                 visible.append(category)

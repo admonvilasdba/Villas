@@ -57,9 +57,11 @@
                                         {% if dish.prep_time_display %}data-time="{{ dish.prep_time_display }}"{% endif %}
                                         {% if dish.image %}data-image="{{ dish.image.url }}"{% endif %}
                                     >
-                                        {% if dish.image %}
-                                            <div class="dish__media is-loading" aria-busy="true">
-                                                <img class="dish__image" src="{{ dish.image.url }}" alt="{{ dish.name }}" loading="lazy" decoding="async">
+                                        {% if dish.image or subcategory.has_dish_images %}
+                                            <div class="dish__media{% if dish.image %} is-loading{% else %} dish__media--placeholder{% endif %}"{% if dish.image %} aria-busy="true"{% else %} aria-hidden="true"{% endif %}>
+                                                {% if dish.image %}
+                                                    <img class="dish__image" src="{{ dish.image.url }}" alt="{{ dish.name }}" loading="lazy" decoding="async">
+                                                {% endif %}
                                             </div>
                                         {% endif %}
 
