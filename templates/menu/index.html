@@ -3,6 +3,15 @@
 
 {% block title %}Vila's — {% translate "Carta" %}{% endblock %}
 
+{% block extra_head %}
+<noscript>
+    <style>
+        .dish__media.is-loading::before { display: none; }
+        .dish__media.is-loading .dish__image { opacity: 1; }
+    </style>
+</noscript>
+{% endblock %}
+
 {% block content %}
 <h1 class="menu__title">
     {% translate "Nuestra Carta" %}
@@ -49,8 +58,8 @@
                                         {% if dish.image %}data-image="{{ dish.image.url }}"{% endif %}
                                     >
                                         {% if dish.image %}
-                                            <div class="dish__media">
-                                                <img class="dish__image" src="{{ dish.image.url }}" alt="{{ dish.name }}" loading="lazy">
+                                            <div class="dish__media is-loading" aria-busy="true">
+                                                <img class="dish__image" src="{{ dish.image.url }}" alt="{{ dish.name }}" loading="lazy" decoding="async">
                                             </div>
                                         {% endif %}
 

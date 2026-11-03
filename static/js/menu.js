@@ -15,6 +15,43 @@
   var backBtn = document.getElementById('modal-back');
 
   var lastTrigger = null;
+  var modalLoadToken = 0;
+
+  function revealMedia(media) {
+    media.classList.remove('is-loading', 'is-error');
+    media.classList.add('is-loaded');
+    media.setAttribute('aria-busy', 'false');
+  }
+
+  function failMedia(media) {
+    media.classList.remove('is-loading', 'is-loaded');
+    media.classList.add('is-error');
+    media.setAttribute('aria-busy', 'false');
+  }
+
+  function watchDishMedia(media) {
+    var image = media.querySelector('.dish__image');
+    if (!image) return;
+
+    if (image.complete) {
+      if (image.naturalWidth > 0) {
+        revealMedia(media);
+      } else {
+        failMedia(media);
+      }
+      return;
+    }
+
+    image.addEventListener('load', function () {
+      revealMedia(media);
+    }, { once: true });
+
+    image.addEventListener('error', function () {
+      failMedia(media);
+    }, { once: true });
+  }
+
+  document.querySelectorAll('.dish__media').forEach(watchDishMedia);
 
   function openModal(card) {
     lastTrigger = card;
@@ -22,15 +59,45 @@
     modalDesc.textContent = card.dataset.desc || '';
     modalPrice.textContent = card.dataset.price || '';
 
+    modalLoadToken += 1;
+    var loadToken = modalLoadToken;
+
+    modalMedia.classList.remove('is-loading', 'is-loaded', 'is-error', 'is-placeholder');
+
     if (card.dataset.image) {
-      modalImage.src = card.dataset.image;
       modalImage.hidden = false;
       modalImage.alt = card.dataset.title || '';
+      modalMedia.classList.add('is-loading');
+      modalMedia.setAttribute('aria-busy', 'true');
+
+      modalImage.onload = function () {
+        if (loadToken !== modalLoadToken) return;
+        revealMedia(modalMedia);
+      };
+
+      modalImage.onerror = function () {
+        if (loadToken !== modalLoadToken) return;
+        failMedia(modalMedia);
+        modalImage.hidden = true;
+      };
+
+      modalImage.src = card.dataset.image;
+
+      if (modalImage.complete) {
+        if (modalImage.naturalWidth > 0) {
+          modalImage.onload();
+        } else {
+          modalImage.onerror();
+        }
+      }
     } else {
-      modalImage.src = '';
+      modalImage.onload = null;
+      modalImage.onerror = null;
       modalImage.hidden = true;
+      modalImage.removeAttribute('src');
       modalImage.alt = '';
       modalMedia.classList.add('is-placeholder');
+      modalMedia.setAttribute('aria-busy', 'false');
     }
 
     if (card.dataset.time) {
@@ -46,6 +113,7 @@
   }
 
   function closeModal() {
+    modalLoadToken += 1;
     modal.classList.remove('is-open');
     document.body.classList.remove('modal-open');
     if (lastTrigger) lastTrigger.focus();
